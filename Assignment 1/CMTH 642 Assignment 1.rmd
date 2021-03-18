@@ -1,0 +1,150 @@
+---
+title: 'CMTH 642 Data Analytics: Advanced Methods'
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+<center> <h1> Assignment 1 (10%) </h1> </center>
+<center>  <h3> [Ilhak Park] </h2> </center>
+<center> <h3> [DJ0 & 501072432] </h2> </center>
+---
+
+#### 1. Read the csv files in the folder. (3 points)
+```{r}
+micro <- read.csv(file= "USDA_Micronutrients.csv", sep= ",")
+macro <- read.csv(file="USDA_Macronutrients.csv", sep =",")
+```
+
+#### 2. Merge the data frames using the variable "ID". Name the Merged Data Frame "USDA". (6 points)
+```{r}
+USDA <- merge(macro,micro)
+summary(USDA)
+```
+
+#### 3. Check the datatypes of the attributes. Delete the commas in the Sodium and Potasium records. Assign Sodium and Potasium as numeric data types. (6 points)
+```{r}
+sapply (USDA, class)
+USDA$Sodium <- gsub(",", "", USDA$Sodium)
+USDA$Potassium <-gsub(",", "", USDA$Potassium)
+USDA$Sodium <- as.numeric(USDA$Sodium)
+USDA$Potassium <- as.numeric(USDA$Potassium)
+```
+
+#### 4. Remove records (rows) with missing values in more than 4 attributes (columns). How many records remain in the data frame? (6 points)
+```{r}
+USDA <- USDA[(apply (is.na(USDA),1,sum)) <= 4,]
+nrow(USDA)
+#The remaining records are 6,887.
+```
+
+#### 5. For records with missing values for Sugar, Vitamin E and Vitamin D, replace missing values with mean value for the respective variable. (6 points)
+```{r}
+USDA$Sugar[is.na(USDA$Sugar)] = mean(USDA$Sugar[!is.na(USDA$Sugar)])
+
+USDA$VitaminE[is.na(USDA$VitaminE)] = mean(USDA$VitaminE[!is.na(USDA$VitaminE)])
+
+
+USDA$VitaminD[is.na(USDA$VitaminD)] = mean(USDA$VitaminD[!is.na(USDA$VitaminD)])
+
+#checking if 0
+#USDA$Sugar[is.na(USDA$Sugar)] 
+#USDA$VitaminE[is.na(USDA$VitaminE)]
+#USDA$VitaminD[is.na(USDA$VitaminD)]
+```
+
+#### 6. With a single line of code, remove all remaining records with missing values. Name the new Data Frame "USDAclean". How many records remain in the data frame? (6 points)
+```{r}
+USDAclean <- USDA[complete.cases(USDA), ]
+nrow(USDAclean)
+#The remaining records are 6,310.
+```
+
+#### 7. Which food has the highest sodium level? (6 points)
+```{r}
+max(USDAclean$Sodium)
+USDAclean$Description[USDAclean$Sodium ==max(USDAclean$Sodium)]
+#SALT,TABLE has the highest sodium level that is 38,758.
+```
+
+#### 8. Create a histogram of Vitamin C distribution in foods. (6 points)
+```{r}
+hist(USDAclean$VitaminC , xlim=c(0,100), breaks= 100, xlab = "Vitamin C", main ="Vitamin C Distribution")
+```
+
+#### 9. Create a boxplot to illustrate the distribution of values for TotalFat, Protein and Carbohydrate. (6 points)
+```{r}
+boxplot(USDAclean$TotalFat, USDAclean$Protein, USDAclean$Carbohydrate,main="Boxplot Illustration", names=c("TotalFat", "Protein","Carbs."))
+```
+
+#### 10. Create a scatterplot to illustrate the relationship between a food's TotalFat content and its Calorie content. (6 points)
+```{r}
+plot(USDAclean$TotalFat, USDAclean$Calories, main ="Scatterplot Illustration",xlab="TotalFat (green)",ylab="Calories (red)", col=c(2,3))
+```
+
+#### 11. Add a variable to the data frame that takes value 1 if the food has higher sodium than average, 0 otherwise. Call this variable HighSodium. Do the same for High Calories, High Protein, High Sugar, and High Fat. How many foods have both high sodium and high fat? (8 points)
+```{r}
+#High Sodium
+USDAclean$HighSodium[USDAclean$Sodium > mean(USDAclean$Sodium)] <- 1
+USDAclean$HighSodium[USDAclean$Sodium <= mean(USDAclean$Sodium)] <- 0
+
+#High Calories
+USDAclean$HighCalories[USDAclean$Calories > mean(USDAclean$Calories)] <- 1
+USDAclean$HighCalories[USDAclean$Calories <= mean(USDAclean$Calories)] <- 0
+
+#High Protein
+USDAclean$HighProtein[USDAclean$Protein > mean(USDAclean$Protein)] <- 1
+USDAclean$HighProtein[USDAclean$Protein <= mean(USDAclean$Protein)] <- 0
+
+#High Sugar
+USDAclean$HighSugar[USDAclean$Sugar > mean(USDAclean$Sugar)] <- 1
+USDAclean$HighSugar[USDAclean$Sugar <= mean(USDAclean$Sugar)] <- 0
+
+#High Fat
+USDAclean$HighFat[USDAclean$TotalFat > mean(USDAclean$TotalFat)] <- 1
+USDAclean$HighFat[USDAclean$TotalFat <= mean(USDAclean$TotalFat)] <- 0
+
+High<-apply(USDAclean[c("HighSodium", "HighFat")], 1, sum)
+table(High)
+#644 foods have both high sodium and high fat.
+
+```
+
+#### 12. Calculate the average amount of iron, for high and low protein foods. (8 points)
+```{r}
+tapply(USDAclean$Iron, USDAclean$HighProtein, mean)
+#The average amount of iron for high protein food is 3.069541.
+#The average amount of iron for low protein food is 2.696634.
+```
+
+#### 13. Create a script for a "HealthCheck" program to detect unhealthy foods. Use the algorithm flowchart below as a basis for this script. (8 points)
+```{r}
+require(jpeg)
+img<-readJPEG("HealthCheck.jpg")
+plot(1:4, ty = 'n', ann = F, xaxt = 'n', yaxt = 'n')
+rasterImage(img,1,1,4,4)
+```
+```{r}
+HealthCheck <- function(food){if (food$HighSodium ==0) return ("Pass") else if (food$HighSugar ==0) return ("Pass") else if(food$HighFat ==0) return("Pass") else return("Fail")}
+```
+
+#### 14. Add a new variable called HealthCheck to the data frame using the output of the function. (8 points)
+```{r}
+for (index in 1:nrow(USDAclean)) {USDAclean$HealthCheck[index] = HealthCheck(USDAclean[index,])}
+```
+
+#### 15. How many foods in the USDAclean data frame fail the HealthCheck? (8 points)
+```{r}
+table(USDAclean$HealthCheck)
+#237 foods fail the HealthCheck.
+```
+
+#### 16. Save your final data frame as "USDAclean_ [your last name]." (3 points)
+```{r}
+write.csv(USDAclean, "USDAclean_Park")
+```
+
+
+This is the end of Assignment 1
+
+Ceni Babaoglu, PhD
