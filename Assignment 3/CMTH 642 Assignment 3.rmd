@@ -1,0 +1,99 @@
+---
+title: 'CMTH 642 Data Analytics: Advanced Methods'
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+<center> <h1> Assignment 3 (10%) </h1> </center>
+<center>  <h3> [Ilhak Park] </h2> </center>
+<center> <h3> [DJ0 & 501072432] </h2> </center>
+---
+
+
+#### 1. Import to R the following fiel: http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv (The dataset is related to white Portuguese "Vinho Verde" wine. For more info: https://archive.ics.uci.edu/ml/datasets/Wine+Quality) (3 points)
+```{r}
+wine <- read.csv(file="http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv", header = TRUE, sep =";")
+```
+
+#### 2. Check the datatypes of the attributes. (3 points)
+```{r}
+sapply (wine, class)
+```
+  
+#### 3. Are there any missing values in the dataset? (4 points)
+```{r}
+str(wine)
+sum(is.na(wine))
+#there is no missing values in the dataset
+```
+
+#### 4. What is the correlation between the attributes other than Quality? (10 points)
+```{r}
+corWine <- cor(wine[-12])
+corWine
+library(corrplot)
+corrplot(corWine, method="circle")
+```
+
+#### 5. Graph the frequency distribution of wine quality by using Quality. (10 points)
+```{r}
+hist(wine$quality)
+```
+
+#### 6.	Reduce the levels of rating for quality to three levels as high, medium and low. Assign the levels of 3 and 4 to level 0; 5 and 6 to level 1; and 7,8 and 9 to level 2. (10 points)
+```{r}
+for (i in  1:4898){ if (wine$quality[i]==3 | wine$quality[i]==4) {wine$quality[i] = 'Level 0: Low'} else if (wine$quality[i]==5 | wine$quality[i]==6) {wine$quality[i] = 'Level 1: Medium'} else if (wine$quality[i]==7 | wine$quality[i]==8 | wine$quality[i]==9) {wine$quality[i] = 'Level 2: High'}}
+
+table(wine$quality)
+```
+
+#### 7. Normalize the data set by using the following function: (12 points)
+```{r}
+normalize <- function(x){
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+```{r}
+wine_n <- as.data.frame(lapply(wine[-12], normalize))
+wine_n <- cbind(wine_n, wine$quality)
+summary(wine_n)
+```
+
+#### 8. Divide the dataset to training and test sets. (12 points)
+```{r}
+set.seed(1)
+index <- sample (1:nrow(wine_n), 0.65 *nrow(wine_n))
+wine_train <- wine_n[index,]
+wine_test <- wine_n[-index,]
+wine_train_labels <- wine_train[,12]
+wine_test_labels <- wine_test[,12]
+table(wine_train_labels)
+table(wine_test_labels)
+
+```
+
+#### 9. Use the KNN algorithm to predict the quality of wine using its attributes. (12 points)
+```{r}
+library(class)
+wine_test_pred <- knn(train = wine_train[,1:11], test = wine_test[,1:11], cl = wine_train[,12], k=10)
+table(wine_test_pred)
+```
+
+#### 10. Display the confusion matrix to evaluate the model performance. (12 points)
+```{r}
+CM <- table(Actual = wine_test_labels, Predicted = wine_test_pred)
+CM
+```
+
+#### 11. Evaluate the model performance by computing Accuracy, Sensitivity and Specificity. (12 points)
+```{r}
+library(e1071)
+library(caret)
+confusionMatrix(CM)
+```
+
+This is the end of Assignment 3
+
+Ceni Babaoglu, PhD
